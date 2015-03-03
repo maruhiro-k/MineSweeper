@@ -14,6 +14,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.GridLayout;
 import android.widget.ImageButton;
+import android.widget.Switch;
+import android.widget.TextView;
 
 import java.util.Random;
 
@@ -38,10 +40,12 @@ public class MainActivity extends ActionBarActivity {
     };
 
     private int level = 0;  // 選択レベル
+    private MineTimer timer;  // ゲームタイマー
     private Tile tiles[][]; // 配置されたタイル
-    private MineTimer timer = new MineTimer();  // ゲームタイマー
+    private GridLayout field;   // タイル置き場
     private Bitmap resetImg[] = new Bitmap[4];  // リセットボタンの顔
     private ImageButton resetBtn;   // リセットボタン
+    private TextView bombText;  // 爆弾の残り数
 
    // 3x3のマスを順番に走査するためのクラス
     private class AroundIterator
@@ -82,7 +86,11 @@ public class MainActivity extends ActionBarActivity {
         setContentView(R.layout.activity_main);
 
         // Viewを拾っておく
+        field = (GridLayout)findViewById(R.id.FieldTable);
         resetBtn = (ImageButton) findViewById(R.id.ResetButton);
+        bombText = (TextView) findViewById(R.id.BombCounter);
+        TextView timerView = (TextView) findViewById(R.id.TimeCounter);
+        timer = new MineTimer(timerView);  // ゲームタイマー
 
         // 画像用意
         Bitmap resetBmp = BitmapFactory.decodeResource(this.getResources(), R.drawable.reset);
@@ -112,49 +120,50 @@ public class MainActivity extends ActionBarActivity {
         // へこみを戻す
         clearDownTile();
 
-        // 座標とって
-        // フィールド内であること確認
-        // フィールド内のRCに展開
-        Point pt = new Point();
-        if (getTileIndex(event.getX(), event.getY(), pt)) {
-            int c = pt.x, r = pt.y;
+        if (field.isEnabled()) {
+            resetBtn.setImageBitmap(resetImg[0]);
 
-            // 旗立て
-            if (isFlagTime()) {
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    flag(r, c);
+            // 座標とってフィールド内であること確認
+            // フィールド内のRCに展開
+            Point pt = new Point();
+            if (getTileIndex(event.getX(), event.getY(), pt)) {
+                int c = pt.x, r = pt.y;
+
+                // 旗立て
+                if (isFlagTime()) {
+                    if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                        flag(r, c);
+                        return true;
+                    }
+                }
+
+                // 開く
+                else {
+                    if (event.getAction() == MotionEvent.ACTION_UP) {
+                        // 初回クリックでゲームスタート
+                        if (isFirstClick()) {
+                            startGame(r, c);
+                        }
+
+                        // 開ける
+                        int res = open(r, c);
+                        if (res < 0) {
+                            end(false);     // 死んだ
+                        } else if (res == 0) {
+                            end(true);    // クリア
+                        }
+                    } else {
+                        // へこます
+                        down(r, c);
+                        resetBtn.setImageBitmap(resetImg[1]);
+                    }
                     return true;
                 }
-            }
-
-            // 開く
-            else {
-                if (event.getAction() == MotionEvent.ACTION_UP) {
-                    // 初回クリックでゲームスタート
-                    if (isFirstClick()) {
-                        startGame(r, c);
-                    }
-
-                    // 開ける
-                    int res = open(r, c);
-                    if (res < 0) {
-                        end(false);     // 死んだ
-                    } else if (res == 0) {
-                        end(true);    // クリア
-                    }
-                } else {
-                    // へこます
-                    down(r, c);
-                }
-                return true;
             }
         }
 
         return super.onTouchEvent(event);
     }
-
-    // タイマー
-    // 表示変更
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -191,7 +200,8 @@ public class MainActivity extends ActionBarActivity {
     // 盤面リセット
     private void reset() {
         // タイマー初期化
-        timer.init();
+        timer.clear();
+        bombText.setText(String.format("%03d", s[level].bombs));
 
         // 顔を戻す
         resetBtn.setImageBitmap(resetImg[0]);
@@ -199,7 +209,6 @@ public class MainActivity extends ActionBarActivity {
         // 盤面作り直し
         Tile.SIZE = 32;
 
-        GridLayout field = (GridLayout)findViewById(R.id.FieldTable);
         field.setColumnCount(s[level].cols);
         field.setRowCount(s[level].rows);
 
@@ -214,8 +223,8 @@ public class MainActivity extends ActionBarActivity {
                 if (tiles[r][c] == null) {
                     tiles[r][c] = new Tile(this);
                     GridLayout.LayoutParams param = new GridLayout.LayoutParams();
-                    param.width = 32;
-                    param.height = 32;
+                    param.width = Tile.SIZE;
+                    param.height = Tile.SIZE;
                     param.columnSpec = GridLayout.spec(c);
                     param.rowSpec = GridLayout.spec(r);
                     tiles[r][c].setLayoutParams(param);
@@ -224,7 +233,7 @@ public class MainActivity extends ActionBarActivity {
                 tiles[r][c].clear();
             }
         }
-        Log.i("tiles", tiles.length + "," + tiles[0].length);
+        field.setEnabled(true);
     }
 
     private void clearDownTile() {
@@ -240,7 +249,6 @@ public class MainActivity extends ActionBarActivity {
 
     private boolean getTileIndex(float x, float y, Point index) {
         // 座標からタイル番号を計算
-        View field = findViewById(R.id.FieldTable);
         int pos[] = new int[2];
         field.getLocationInWindow(pos);
         x -= pos[0];
@@ -276,7 +284,8 @@ public class MainActivity extends ActionBarActivity {
     }
 
     private boolean isFlagTime() {
-        return false;
+        Switch s = (Switch)findViewById(R.id.FlagSwitch);
+        return (s.isChecked());
     }
 
     private void flag(int r, int c) {
@@ -301,7 +310,7 @@ public class MainActivity extends ActionBarActivity {
             }
         }
 
-        // todo 残り数描画
+        bombText.setText(String.format("%03d", remains));
     }
 
     private void down(int r, int c) {
@@ -397,13 +406,13 @@ public class MainActivity extends ActionBarActivity {
 
     private void end(boolean alive) {
         // 終了
-        // todo 全体をタッチできないように
+        field.setEnabled(false);
 
         if (alive) {
-            // リセットボタンを喜んだ絵に
+            resetBtn.setImageBitmap(resetImg[2]);   // リセットボタンを喜んだ絵に
         }
         else {
-            // リセットボタンを悲しい絵に
+            resetBtn.setImageBitmap(resetImg[3]);   // リセットボタンを悲しい絵に
         }
 
         // クリアなら残りの爆弾を旗に変換
@@ -422,6 +431,10 @@ public class MainActivity extends ActionBarActivity {
                     }
                 }
             }
+        }
+
+        if (alive) {
+            bombText.setText("000");
         }
 
         // タイマーストップ

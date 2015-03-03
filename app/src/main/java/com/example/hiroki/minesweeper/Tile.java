@@ -22,7 +22,7 @@ public class Tile extends ImageView {
     public static final int ST_DOWN = 15;
     private static Bitmap img[] = new Bitmap[ST_BADFLAG+1];
 
-    public static int SIZE = 32;    // タイルの基本サイズ
+    public static int SIZE = 1;    // タイルの基本サイズ
 
     public static void setBitmap(Bitmap bmp) {
         int h = bmp.getHeight();
