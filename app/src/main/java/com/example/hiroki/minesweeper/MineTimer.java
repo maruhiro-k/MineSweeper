@@ -5,15 +5,21 @@ package com.example.hiroki.minesweeper;
  */
 public class MineTimer {
     public MineTimer() {
+        init();
     }
 
     public void init() {
+        started = false;
     }
     public void start() {
+        started = true;
     }
     public void stop() {
+        started = false;
     }
     public boolean isWorking() {
-        return false;
+        return started;
     }
+
+    private boolean started = false;
 }

@@ -1,6 +1,7 @@
 package com.example.hiroki.minesweeper;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.widget.ImageView;
 
 /**
@@ -13,13 +14,22 @@ public class Tile extends ImageView {
 
     public static final int ST_UNKNOWN = 0;
     public static final int ST_FLAG = 1;
-    public static final int ST_DOWN = 2;
+    public static final int ST_QUESTION = 2;
     public static final int ST_OPENED = 3;
     public static final int ST_BOMB = 12;
     public static final int ST_FIRED = 13;
     public static final int ST_BADFLAG = 14;
+    public static final int ST_DOWN = 15;
+    private static Bitmap img[] = new Bitmap[ST_BADFLAG+1];
 
     public static int SIZE = 32;    // タイルの基本サイズ
+
+    public static void setBitmap(Bitmap bmp) {
+        int h = bmp.getHeight();
+        for (int i=ST_UNKNOWN; i<=ST_BADFLAG; ++i) {
+            img[i] = Bitmap.createBitmap(bmp, h*i, 0, h, h);
+        }
+    }
 
     public Tile(Context context) {
         super(context);
@@ -37,7 +47,12 @@ public class Tile extends ImageView {
 
     public void set(int state) {
         this.state = state;
-        // todo 画像切り替え
+        if (state==ST_DOWN) {
+            setImageBitmap(img[ST_OPENED]);
+        }
+        else {
+            setImageBitmap(img[state]);
+        }
     }
 
     public void putBomb() {

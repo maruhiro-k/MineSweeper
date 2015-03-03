@@ -1,6 +1,10 @@
 package com.example.hiroki.minesweeper;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.BitmapRegionDecoder;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
@@ -8,21 +12,38 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.GridLayout;
+import android.widget.ImageButton;
 
 import java.util.Random;
 
 
 public class MainActivity extends ActionBarActivity {
 
-    private int level = 0;
-    private int cols = 10;
-    private int rows = 10;
-    private int bombs = 10;
+    // レベル別設定
+    private class Setting {
+        public int cols;
+        public int rows;
+        public int bombs;
+        Setting(int c, int r, int b) {
+            cols = c;
+            rows = r;
+            bombs = b;
+        }
+    }
+    private final Setting s[] = {
+            new Setting(8, 8, 10),    // 初級
+            new Setting(20, 20, 20),    // 中級
+            new Setting(20, 40, 30)     // 上級
+    };
 
-    private Tile tiles[][];
+    private int level = 0;  // 選択レベル
+    private Tile tiles[][]; // 配置されたタイル
+    private MineTimer timer = new MineTimer();  // ゲームタイマー
+    private Bitmap resetImg[] = new Bitmap[4];  // リセットボタンの顔
+    private ImageButton resetBtn;   // リセットボタン
 
-    private MineTimer timer = new MineTimer();
-
+   // 3x3のマスを順番に走査するためのクラス
     private class AroundIterator
     {
         private AroundIterator(int r, int c) {
@@ -38,15 +59,16 @@ public class MainActivity extends ActionBarActivity {
         }
         private boolean next() {
             while (true) {
+                if (dr>1) {
+                    return false;
+                }
                 r = r0 + dr;
                 c = c0 + dc;
                 if (++dc>1) {
                     dc = -1;
-                    if (++dr>1) {
-                        return false;
-                    }
+                    ++dr;
                 }
-                if (r>=0 && r<rows && c>=0 && c<cols) {
+                if (r>=0 && r<s[level].rows && c>=0 && c<s[level].cols) {
                     return true;
                 }
             }
@@ -58,6 +80,19 @@ public class MainActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // Viewを拾っておく
+        resetBtn = (ImageButton) findViewById(R.id.ResetButton);
+
+        // 画像用意
+        Bitmap resetBmp = BitmapFactory.decodeResource(this.getResources(), R.drawable.reset);
+        int h = resetBmp.getHeight();
+        resetImg[0] = Bitmap.createBitmap(resetBmp, h*0, 0, h, h);
+        resetImg[1] = Bitmap.createBitmap(resetBmp, h*1, 0, h, h);
+        resetImg[2] = Bitmap.createBitmap(resetBmp, h*2, 0, h, h);
+        resetImg[3] = Bitmap.createBitmap(resetBmp, h*3, 0, h, h);
+
+        Tile.setBitmap(BitmapFactory.decodeResource(this.getResources(), R.drawable.tile));
 
         // 設定読み込み
         loadSettings();
@@ -80,10 +115,9 @@ public class MainActivity extends ActionBarActivity {
         // 座標とって
         // フィールド内であること確認
         // フィールド内のRCに展開
-        int c = -1, r = -1;
-
         Point pt = new Point();
         if (getTileIndex(event.getX(), event.getY(), pt)) {
+            int c = pt.x, r = pt.y;
 
             // 旗立て
             if (isFlagTime()) {
@@ -159,21 +193,33 @@ public class MainActivity extends ActionBarActivity {
         // タイマー初期化
         timer.init();
 
+        // 顔を戻す
+        resetBtn.setImageBitmap(resetImg[0]);
+
         // 盤面作り直し
         Tile.SIZE = 32;
 
-        if (tiles==null || tiles.length!=rows || tiles[0].length!=cols) {
-            tiles = new Tile[rows][];
+        GridLayout field = (GridLayout)findViewById(R.id.FieldTable);
+        field.setColumnCount(s[level].cols);
+        field.setRowCount(s[level].rows);
+
+        if (tiles==null || tiles.length!=s[level].rows || tiles[0].length!=s[level].cols) {
+            tiles = new Tile[s[level].rows][];
         }
-        for (int r=0; r<rows; ++r) {
+        for (int r=0; r<s[level].rows; ++r) {
             if (tiles[r]==null) {
-                tiles[r] = new Tile[cols];
+                tiles[r] = new Tile[s[level].cols];
             }
-            for (int c=0; c<cols; ++c) {
+            for (int c=0; c<s[level].cols; ++c) {
                 if (tiles[r][c] == null) {
                     tiles[r][c] = new Tile(this);
-                    tiles[r][c].setX(c * Tile.SIZE);
-                    tiles[r][c].setY(r * Tile.SIZE);
+                    GridLayout.LayoutParams param = new GridLayout.LayoutParams();
+                    param.width = 32;
+                    param.height = 32;
+                    param.columnSpec = GridLayout.spec(c);
+                    param.rowSpec = GridLayout.spec(r);
+                    tiles[r][c].setLayoutParams(param);
+                    field.addView(tiles[r][c]);
                 }
                 tiles[r][c].clear();
             }
@@ -183,8 +229,8 @@ public class MainActivity extends ActionBarActivity {
 
     private void clearDownTile() {
         // へこんでるタイルを全てもとに戻す
-        for (int r=0; r<rows; ++r) {
-            for (int c=0; c<cols; ++c) {
+        for (int r=0; r<s[level].rows; ++r) {
+            for (int c=0; c<s[level].cols; ++c) {
                 if (tiles[r][c].get()==Tile.ST_DOWN) {
                     tiles[r][c].set(Tile.ST_UNKNOWN);
                 }
@@ -194,12 +240,14 @@ public class MainActivity extends ActionBarActivity {
 
     private boolean getTileIndex(float x, float y, Point index) {
         // 座標からタイル番号を計算
-        View field = findViewById(R.id.action_bar);
-        x -= field.getX();
-        y -= field.getY();
+        View field = findViewById(R.id.FieldTable);
+        int pos[] = new int[2];
+        field.getLocationInWindow(pos);
+        x -= pos[0];
+        y -= pos[1];
         float c = x / Tile.SIZE;
         float r = y / Tile.SIZE;
-        if (c<0 || c>=cols || r<0 || r>=rows) {
+        if (c<0 || c>=s[level].cols || r<0 || r>=s[level].rows) {
             return false;
         }
         index.set((int) (c), (int) (r));
@@ -217,9 +265,9 @@ public class MainActivity extends ActionBarActivity {
 
         // 爆弾配置
         Random rnd = new Random();
-        for (int b = bombs; b>0; ) {
-            int r = rnd.nextInt(rows);
-            int c = rnd.nextInt(cols);
+        for (int b = s[level].bombs; b>0; ) {
+            int r = rnd.nextInt(s[level].rows);
+            int c = rnd.nextInt(s[level].cols);
             if (r!=start_r && c!=start_c && !tiles[r][c].isBomb()) {
                 tiles[r][c].putBomb();
                 --b;
@@ -244,9 +292,9 @@ public class MainActivity extends ActionBarActivity {
         }
 
         // 旗の数数える
-        int remains = bombs;
-        for (int rr=0; rr<rows; ++rr) {
-            for (int cc = 0; cc <= cols; ++cc) {
+        int remains = s[level].bombs;
+        for (int rr=0; rr<s[level].rows; ++rr) {
+            for (int cc=0; cc<s[level].cols; ++cc) {
                 if (tiles[rr][cc].get()==Tile.ST_FLAG) {
                     --remains;
                 }
@@ -301,21 +349,21 @@ public class MainActivity extends ActionBarActivity {
         }
 
         // 残り数える
-        int remains = bombs;
-        for (int rr=0; rr<rows; ++rr) {
-            for (int cc = 0; cc <= cols; ++cc) {
+        int remains = 0;
+        for (int rr=0; rr<s[level].rows; ++rr) {
+            for (int cc=0; cc<s[level].cols; ++cc) {
                 st = tiles[rr][cc].get();
                 if (st==Tile.ST_UNKNOWN || st==Tile.ST_FLAG) {
-                    --remains;
+                    ++remains;
                 }
             }
         }
-        return remains;
+        return remains - s[level].bombs;
     }
 
     private boolean openTile(int r, int c) {
         // タイルを開く
-        if (r < 0 || c < 0 || r >= rows || c >= cols) {
+        if (r < 0 || c < 0 || r >= s[level].rows || c >= s[level].cols) {
             return true;    // 場外
         }
         int st = tiles[r][c].get();
@@ -335,7 +383,7 @@ public class MainActivity extends ActionBarActivity {
                 bomb++;
             }
         }
-        tiles[it.r][it.c].set(Tile.ST_OPENED + bomb);
+        tiles[r][c].set(Tile.ST_OPENED + bomb);
 
         // 0なら回りも開く
         if (bomb == 0) {
@@ -360,8 +408,8 @@ public class MainActivity extends ActionBarActivity {
 
         // クリアなら残りの爆弾を旗に変換
         // ミスなら残りの爆弾表示
-        for (int r=0; r<rows; ++r) {
-            for (int c=0; c<cols; ++c) {
+        for (int r=0; r<s[level].rows; ++r) {
+            for (int c=0; c<s[level].cols; ++c) {
                 int st = tiles[r][c].get();
                 if (tiles[r][c].isBomb()) {
                     if (st==Tile.ST_UNKNOWN) {

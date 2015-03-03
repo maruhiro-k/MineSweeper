@@ -7,27 +7,22 @@
 
     <TextView
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="64px"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="Large Text"
-        android:id="@+id/textView2"
+        android:text="000"
+        android:id="@+id/BombCounter"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="Large Text"
-        android:id="@+id/textView"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
+        android:layout_alignParentStart="true"
+        android:background="#FF000000"
+        android:padding="8px"
+        android:nestedScrollingEnabled="false"
+        android:textColor="#FFFFFFFF" />
 
     <Switch
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="New Switch"
-        android:id="@+id/switch1"
+        android:text="タップで旗を立てる"
+        android:id="@+id/FlagSwitch"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
@@ -35,19 +30,39 @@
         android:layout_alignParentEnd="true" />
 
     <ImageButton
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="64px"
+        android:layout_height="64px"
         android:id="@+id/ResetButton"
+        android:onClick="onReset"
+        android:longClickable="false"
+        android:background="#00000000"
         android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:onClick="onReset" />
+        android:layout_centerHorizontal="true" />
 
-    <GridView
+    <TextView
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/gridView"
+        android:layout_height="64px"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="000"
+        android:id="@+id/TimeCounter"
+        android:background="#FF000000"
+        android:padding="8px"
+        android:nestedScrollingEnabled="false"
+        android:textColor="#FFFFFFFF"
+        android:layout_alignTop="@+id/ResetButton"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
+
+    <GridLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
         android:layout_centerHorizontal="true"
-        android:layout_above="@+id/switch1"
-        android:layout_below="@+id/textView2" />
+        android:layout_below="@+id/BombCounter"
+        android:layout_above="@+id/FlagSwitch"
+        android:id="@+id/FieldTable"
+        android:background="#FFFF0000"
+        android:clickable="false"
+        android:columnCount="10"
+        android:rowCount="10"></GridLayout>
 
 </RelativeLayout>
