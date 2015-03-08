@@ -7,21 +7,26 @@
 
     <TextView
         android:layout_width="wrap_content"
-        android:layout_height="64px"
+        android:layout_height="40dp"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="000"
+        android:text="@string/zero_score"
         android:id="@+id/BombCounter"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:background="#FF000000"
-        android:padding="8px"
         android:nestedScrollingEnabled="false"
-        android:textColor="#FFFFFFFF" />
+        android:textColor="#FFFFFFFF"
+        android:textSize="30sp"
+        android:textAlignment="center"
+        android:typeface="monospace"
+        android:paddingRight="8dp"
+        android:paddingLeft="8dp"
+        android:textStyle="bold" />
 
     <Switch
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="タップで旗を立てる"
+        android:text="@string/flag_switch"
         android:id="@+id/FlagSwitch"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
@@ -30,28 +35,35 @@
         android:layout_alignParentEnd="true" />
 
     <ImageButton
-        android:layout_width="64px"
-        android:layout_height="64px"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
         android:id="@+id/ResetButton"
         android:onClick="onReset"
         android:longClickable="false"
         android:background="#00000000"
         android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true" />
+        android:layout_centerHorizontal="true"
+        android:contentDescription="@string/reset_button"
+        android:scaleType="fitXY" />
 
     <TextView
         android:layout_width="wrap_content"
-        android:layout_height="64px"
+        android:layout_height="40dp"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="000"
+        android:text="@string/zero_score"
         android:id="@+id/TimeCounter"
         android:background="#FF000000"
-        android:padding="8px"
         android:nestedScrollingEnabled="false"
         android:textColor="#FFFFFFFF"
         android:layout_alignTop="@+id/ResetButton"
         android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
+        android:layout_alignParentEnd="true"
+        android:textSize="30sp"
+        android:textStyle="bold"
+        android:typeface="monospace"
+        android:textAlignment="center"
+        android:paddingLeft="8dp"
+        android:paddingRight="8dp" />
 
     <GridLayout
         android:layout_width="fill_parent"
@@ -63,6 +75,8 @@
         android:background="#FFFF0000"
         android:clickable="false"
         android:columnCount="10"
-        android:rowCount="10"></GridLayout>
+        android:rowCount="10"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="12dp"></GridLayout>
 
 </RelativeLayout>

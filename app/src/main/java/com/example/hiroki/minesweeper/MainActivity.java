@@ -104,8 +104,11 @@ public class MainActivity extends ActionBarActivity {
 
         // 設定読み込み
         loadSettings();
+    }
 
-        // クリア
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
         reset();
     }
 
@@ -207,10 +210,19 @@ public class MainActivity extends ActionBarActivity {
         resetBtn.setImageBitmap(resetImg[0]);
 
         // 盤面作り直し
-        Tile.SIZE = 32;
+        int w = field.getWidth();
+        int h = field.getHeight();
+        int length = Math.min(w, h);
+
+        int sz = (length / s[level].cols / 4) * 4;
+        Tile.SIZE = sz;
 
         field.setColumnCount(s[level].cols);
         field.setRowCount(s[level].rows);
+
+        int dw = w - sz * s[level].cols;
+        int dh = h - sz * s[level].rows;
+        field.setPadding(dw/2, dh/8, dw-dw/2, dh-dh/8);
 
         if (tiles==null || tiles.length!=s[level].rows || tiles[0].length!=s[level].cols) {
             tiles = new Tile[s[level].rows][];
