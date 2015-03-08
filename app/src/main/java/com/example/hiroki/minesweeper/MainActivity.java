@@ -34,9 +34,9 @@ public class MainActivity extends ActionBarActivity {
         }
     }
     private final Setting s[] = {
-            new Setting(8, 8, 10),    // 初級
-            new Setting(20, 20, 20),    // 中級
-            new Setting(20, 40, 30)     // 上級
+            new Setting(9, 9, 10),    // 初級
+            new Setting(16, 16, 40),    // 中級
+            new Setting(22, 22, 99)     // 上級
     };
 
     private int level = 0;  // 選択レベル
@@ -109,7 +109,9 @@ public class MainActivity extends ActionBarActivity {
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
-        reset();
+        if (tiles==null) {
+            reset();
+        }
     }
 
     // リセットボタンを押したとき
@@ -183,13 +185,25 @@ public class MainActivity extends ActionBarActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_level0) {
+            level = 0;
+            reset();
             return true;
         }
-
-        // 難易度変更
-        // ハイスコア
-        // チュートリアル
+        if (id == R.id.action_level1) {
+            level = 1;
+            reset();
+            return true;
+        }
+        if (id == R.id.action_level2) {
+            level = 2;
+            reset();
+            return true;
+        }
+        if (id == R.id.action_highscore) {
+            // ハイスコア
+            return true;
+        }
 
         return super.onOptionsItemSelected(item);
     }
@@ -209,7 +223,22 @@ public class MainActivity extends ActionBarActivity {
         // 顔を戻す
         resetBtn.setImageBitmap(resetImg[0]);
 
-        // 盤面作り直し
+        // サイズが違うなら盤面作り直し
+        if (tiles!=null) {
+            if (tiles.length!=s[level].rows || tiles[0].length!=s[level].cols) {
+                tiles = null;
+                /*
+                for (int r=0; r<tiles.length; ++r) {
+                    for (int c=0; c<tiles[r].length; ++c) {
+                        tiles[r][c].remove
+                    }
+                }
+                */
+                field.removeAllViewsInLayout();
+            }
+        }
+
+        // 中央に配置
         int w = field.getWidth();
         int h = field.getHeight();
         int length = Math.min(w, h);
@@ -224,7 +253,8 @@ public class MainActivity extends ActionBarActivity {
         int dh = h - sz * s[level].rows;
         field.setPadding(dw/2, dh/8, dw-dw/2, dh-dh/8);
 
-        if (tiles==null || tiles.length!=s[level].rows || tiles[0].length!=s[level].cols) {
+        // タイルを張り付ける
+        if (tiles==null) {
             tiles = new Tile[s[level].rows][];
         }
         for (int r=0; r<s[level].rows; ++r) {

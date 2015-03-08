@@ -72,7 +72,7 @@
         android:layout_below="@+id/BombCounter"
         android:layout_above="@+id/FlagSwitch"
         android:id="@+id/FieldTable"
-        android:background="#FFFF0000"
+        android:background="#00000000"
         android:clickable="false"
         android:columnCount="10"
         android:rowCount="10"
