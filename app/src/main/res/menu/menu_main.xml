@@ -1,12 +1,14 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools" tools:context=".MainActivity">
-    <item android:id="@+id/action_level0" android:title="初級"
-        android:orderInCategory="100" app:showAsAction="never" />
-    <item android:id="@+id/action_level1" android:title="中級"
-        android:orderInCategory="100" app:showAsAction="never" />
-    <item android:id="@+id/action_level2" android:title="上級"
-        android:orderInCategory="100" app:showAsAction="never" />
+    <group android:checkableBehavior="single">
+        <item android:id="@+id/action_level0" android:title="初級"
+            android:orderInCategory="100" app:showAsAction="never" />
+        <item android:id="@+id/action_level1" android:title="中級"
+            android:orderInCategory="100" app:showAsAction="never" />
+        <item android:id="@+id/action_level2" android:title="上級"
+            android:orderInCategory="100" app:showAsAction="never" />
+    </group>
     <item android:id="@+id/action_highscore" android:title="ハイスコア"
         android:orderInCategory="100" app:showAsAction="never" />
 </menu>
