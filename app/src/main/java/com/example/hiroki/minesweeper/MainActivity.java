@@ -1,13 +1,11 @@
 package com.example.hiroki.minesweeper;
 
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.BitmapRegionDecoder;
 import android.graphics.Point;
-import android.graphics.Rect;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -16,6 +14,7 @@ import android.widget.GridLayout;
 import android.widget.ImageButton;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.Random;
 
@@ -220,8 +219,26 @@ public class MainActivity extends ActionBarActivity {
 
     //! 設定読み込み
     private void loadSettings() {
+        SharedPreferences pref = getPreferences(MODE_PRIVATE);
+
         // 初期レベル
+        level = pref.getInt("level", 0);
+
         // ハイスコア
+        SharedPreferences.Editor editor = null;
+        for (int i=0; i<3; ++i) {
+            String key = "score" + i;
+            long score = pref.getLong(key, -1);
+            if (score<0) {
+                if (editor==null) {
+                    editor = pref.edit();
+                }
+                editor.putLong(key, MineTimer.MAX_TIME);
+            }
+        }
+        if (editor!=null) {
+            editor.commit();
+        }
     }
 
     // 盤面リセット
@@ -237,14 +254,9 @@ public class MainActivity extends ActionBarActivity {
         if (tiles!=null) {
             if (tiles.length!=s[level].rows || tiles[0].length!=s[level].cols) {
                 tiles = null;
-                /*
-                for (int r=0; r<tiles.length; ++r) {
-                    for (int c=0; c<tiles[r].length; ++c) {
-                        tiles[r][c].remove
-                    }
-                }
-                */
                 field.removeAllViewsInLayout();
+                SharedPreferences pref = getPreferences(MODE_PRIVATE);
+                pref.edit().putInt("level", level).commit();
             }
         }
 
@@ -487,6 +499,18 @@ public class MainActivity extends ActionBarActivity {
 
         if (alive) {
             bombText.setText("000");
+
+            // ハイスコア？
+            SharedPreferences pref = getPreferences(MODE_PRIVATE);
+            String key = "score" + level;
+            long msec = timer.getTime();
+            long score = pref.getLong(key, MineTimer.MAX_TIME);
+            if (msec<score) {
+                pref.edit().putLong(key, msec).commit();
+                String text = String.format("ハイスコア！ %.02f秒", msec/1000.f);
+                Toast t = Toast.makeText(this, text, Toast.LENGTH_LONG);
+                t.show();
+            }
         }
 
         // タイマーストップ
