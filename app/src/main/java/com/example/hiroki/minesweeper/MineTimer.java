@@ -16,6 +16,7 @@ public class MineTimer {
     private Timer timer;
     private long startT;    // 開始した時間
     private long currentMsec;     // 経過時間
+    private long prevSec = 0;
     private Handler h;
 
     static public final long MAX_TIME = 999999;
@@ -50,11 +51,9 @@ public class MineTimer {
         currentMsec = System.currentTimeMillis() - startT;
         currentMsec = Math.min(currentMsec, MineTimer.MAX_TIME);
 
-        if (textView!=null) {
-            String s = String.format("%03d", currentMsec/1000);
-            if (!s.equals(textView.getText().toString())) {
-                textView.setText(s);
-            }
+        if (textView!=null && prevSec!=currentMsec/1000) {
+            prevSec = currentMsec/1000;
+            textView.setText(String.format("%03d", prevSec));
         }
     }
 
@@ -70,6 +69,7 @@ public class MineTimer {
     public void clear() {
         stop();
         currentMsec = 0;
+        prevSec = 0;
         this.textView.setText("000");
     }
 
