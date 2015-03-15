@@ -2,13 +2,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools" tools:context=".MainActivity">
     <group android:checkableBehavior="single">
-        <item android:id="@+id/action_level0" android:title="初級"
+        <item android:id="@+id/action_level0" android:title="@string/level0"
             android:orderInCategory="100" app:showAsAction="never" />
-        <item android:id="@+id/action_level1" android:title="中級"
+        <item android:id="@+id/action_level1" android:title="@string/level1"
             android:orderInCategory="100" app:showAsAction="never" />
-        <item android:id="@+id/action_level2" android:title="上級"
+        <item android:id="@+id/action_level2" android:title="@string/level2"
             android:orderInCategory="100" app:showAsAction="never" />
     </group>
-    <item android:id="@+id/action_highscore" android:title="ハイスコア"
+    <item android:id="@+id/action_highscore" android:title="@string/high_score"
         android:orderInCategory="100" app:showAsAction="never" />
 </menu>

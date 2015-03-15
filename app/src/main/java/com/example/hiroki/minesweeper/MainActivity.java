@@ -1,5 +1,6 @@
 package com.example.hiroki.minesweeper;
 
+import android.app.DialogFragment;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -211,6 +212,8 @@ public class MainActivity extends ActionBarActivity {
         }
         if (id == R.id.action_highscore) {
             // ハイスコア
+            DialogFragment dlgFrag = new ScoreDialogFragment();
+            dlgFrag.show(getFragmentManager(), "score");
             return true;
         }
 
@@ -507,7 +510,7 @@ public class MainActivity extends ActionBarActivity {
             long score = pref.getLong(key, MineTimer.MAX_TIME);
             if (msec<score) {
                 pref.edit().putLong(key, msec).commit();
-                String text = String.format("ハイスコア！ %.02f秒", msec/1000.f);
+                String text = String.format("ハイスコア！ %.02f 秒", msec/1000.f);
                 Toast t = Toast.makeText(this, text, Toast.LENGTH_LONG);
                 t.show();
             }
