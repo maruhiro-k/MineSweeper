@@ -51,31 +51,24 @@ public class MainActivity extends ActionBarActivity {
     private class AroundIterator
     {
         private AroundIterator(int r, int c) {
-            r0 = r;
-            c0 = c;
+            r0 = r; c0 = c;
             reset();
         }
         private void reset() {
-            dr = -1;
-            dc = -1;
-            r = -1;
-            c = -1;
+            dr = -1; dc = -1;
+            r = -1; c = -1;
         }
         private boolean next() {
-            while (true) {
-                if (dr>1) {
-                    return false;
-                }
-                r = r0 + dr;
-                c = c0 + dc;
+            while (dr<=1) {
+                r = r0 + dr; c = c0 + dc;
                 if (++dc>1) {
-                    dc = -1;
-                    ++dr;
+                    dc = -1; ++dr;
                 }
                 if (r>=0 && r<s[level].rows && c>=0 && c<s[level].cols) {
                     return true;
                 }
             }
+            return false;
         }
         private int r0, c0, dr, dc, r, c;
     }
