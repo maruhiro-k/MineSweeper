@@ -11,7 +11,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.GridLayout;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -42,7 +43,7 @@ public class MainActivity extends ActionBarActivity {
     private int level = 0;  // 選択レベル
     private MineTimer timer;  // ゲームタイマー
     private Tile tiles[][]; // 配置されたタイル
-    private GridLayout field;   // タイル置き場
+    private FrameLayout field;   // タイル置き場
     private Bitmap resetImg[] = new Bitmap[4];  // リセットボタンの顔
     private ImageButton resetBtn;   // リセットボタン
     private TextView bombText;  // 爆弾の残り数
@@ -79,7 +80,7 @@ public class MainActivity extends ActionBarActivity {
         setContentView(R.layout.activity_main);
 
         // Viewを拾っておく
-        field = (GridLayout)findViewById(R.id.FieldTable);
+        field = (FrameLayout)findViewById(R.id.FieldTable);
         resetBtn = (ImageButton) findViewById(R.id.ResetButton);
         bombText = (TextView) findViewById(R.id.BombCounter);
         TextView timerView = (TextView) findViewById(R.id.TimeCounter);
@@ -95,6 +96,18 @@ public class MainActivity extends ActionBarActivity {
 
         Tile.setBitmap(BitmapFactory.decodeResource(this.getResources(), R.drawable.tile));
 
+        // タイル用意
+        Tile.SIZE = 0;
+        tiles = new Tile[s[2].rows][];
+        for (int r=0; r<s[2].rows; ++r) {
+            tiles[r] = new Tile[s[2].cols];
+            for (int c=0; c<s[2].cols; ++c) {
+                Tile t = new Tile(this);
+                field.addView(t);
+                tiles[r][c] = t;
+            }
+        }
+
         // 設定読み込み
         loadSettings();
     }
@@ -102,7 +115,7 @@ public class MainActivity extends ActionBarActivity {
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
-        if (tiles==null) {
+        if (Tile.SIZE==0) {
             reset();
         }
     }
@@ -246,51 +259,42 @@ public class MainActivity extends ActionBarActivity {
         // 顔を戻す
         resetBtn.setImageBitmap(resetImg[0]);
 
-        // サイズが違うなら盤面作り直し
-        if (tiles!=null) {
-            if (tiles.length!=s[level].rows || tiles[0].length!=s[level].cols) {
-                tiles = null;
-                field.removeAllViewsInLayout();
-                SharedPreferences pref = getPreferences(MODE_PRIVATE);
-                pref.edit().putInt("level", level).commit();
-            }
-        }
-
-        // 中央に配置
+        // サイズ計算
         int w = field.getWidth();
         int h = field.getHeight();
         int length = Math.min(w, h);
-
         int sz = (length / s[level].cols / 4) * 4;
-        Tile.SIZE = sz;
 
-        field.setColumnCount(s[level].cols);
-        field.setRowCount(s[level].rows);
+        // サイズが違うなら盤面作り直し
+        boolean isResize = (Tile.SIZE!=sz);
+        if (isResize) {
+            Tile.SIZE = sz;
+            SharedPreferences pref = getPreferences(MODE_PRIVATE);
+            pref.edit().putInt("level", level).commit();
+        }
 
-        int dw = w - sz * s[level].cols;
-        int dh = h - sz * s[level].rows;
-        field.setPadding(dw/2, dh/8, dw-dw/2, dh-dh/8);
+        int x0 = (w - sz * s[level].cols) / 2;
+        int y0 = (h - sz * s[level].rows) / 8;
 
         // タイルを張り付ける
-        if (tiles==null) {
-            tiles = new Tile[s[level].rows][];
-        }
-        for (int r=0; r<s[level].rows; ++r) {
-            if (tiles[r]==null) {
-                tiles[r] = new Tile[s[level].cols];
-            }
-            for (int c=0; c<s[level].cols; ++c) {
-                if (tiles[r][c] == null) {
-                    tiles[r][c] = new Tile(this);
-                    GridLayout.LayoutParams param = new GridLayout.LayoutParams();
-                    param.width = Tile.SIZE;
-                    param.height = Tile.SIZE;
-                    param.columnSpec = GridLayout.spec(c);
-                    param.rowSpec = GridLayout.spec(r);
-                    tiles[r][c].setLayoutParams(param);
-                    field.addView(tiles[r][c]);
+        for (int r=0; r<s[2].rows; ++r) {
+            boolean inR = (r<s[level].rows);
+            for (int c=0; c<s[2].cols; ++c) {
+                Tile t =  tiles[r][c];
+                if (inR && (c<s[level].cols)) {
+                    t.setVisibility(View.VISIBLE);
+                    t.clear();
+                    if (isResize) {
+                        ViewGroup.LayoutParams p = t.getLayoutParams();
+                        p.width = sz;
+                        p.height = sz;
+                        t.setX(x0 + c*sz);
+                        t.setY(y0 + r*sz);
+                    }
                 }
-                tiles[r][c].clear();
+                else {
+                    t.setVisibility(View.INVISIBLE);
+                }
             }
         }
         field.setEnabled(true);

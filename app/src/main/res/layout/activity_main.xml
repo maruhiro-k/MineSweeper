@@ -65,7 +65,7 @@
         android:paddingLeft="8dp"
         android:paddingRight="8dp" />
 
-    <GridLayout
+    <FrameLayout
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:layout_centerHorizontal="true"
@@ -77,6 +77,6 @@
         android:columnCount="10"
         android:rowCount="10"
         android:layout_marginTop="12dp"
-        android:layout_marginBottom="12dp"></GridLayout>
+        android:layout_marginBottom="12dp"></FrameLayout>
 
 </RelativeLayout>
