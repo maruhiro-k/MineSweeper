@@ -314,9 +314,9 @@ public class MainActivity extends ActionBarActivity {
     private boolean getTileIndex(float x, float y, Point index) {
         // 座標からタイル番号を計算
         int pos[] = new int[2];
-        field.getLocationInWindow(pos);
-        x -= pos[0] + field.getPaddingLeft();
-        y -= pos[1] + field.getPaddingTop();
+        tiles[0][0].getLocationInWindow(pos);
+        x -= pos[0];
+        y -= pos[1];
         float c = x / Tile.SIZE;
         float r = y / Tile.SIZE;
         if (c<0 || c>=s[level].cols || r<0 || r>=s[level].rows) {
