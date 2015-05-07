@@ -219,11 +219,15 @@ public class MainActivity extends ActionBarActivity {
         boolean isFlagTime = isFlagTime();
         mainView.setBackgroundColor(isFlagTime ? 0xFF0080FF : 0xFFFF8000);
 
+        if (isFlagTime) {
+            tilePointer = MotionEvent.INVALID_POINTER_ID;
+            openPt = null;
+        }
+
         if (downPt!=null) {
             if (isFlagTime) {
                 // 旗立てる
                 flag(downPt.y, downPt.x);
-                tilePointer = MotionEvent.INVALID_POINTER_ID;
             }
             else {
                 // へこます
