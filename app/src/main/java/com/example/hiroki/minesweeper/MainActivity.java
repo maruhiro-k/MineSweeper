@@ -144,79 +144,78 @@ public class MainActivity extends ActionBarActivity {
         clearDownTile();
         resetBtn.setImageBitmap(resetImg[0]);
 
+        // 情報取得
+        Point pt = new Point();
         Point downPt = null;
         Point openPt = null;
 
         int idx = event.getActionIndex();
-        int id = event.getPointerId(idx);
+        int act = event.getActionMasked();
+        int cnt = Math.min(event.getPointerCount(), 2);
 
-        switch (event.getActionMasked()) {
-            case MotionEvent.ACTION_DOWN:
-            case MotionEvent.ACTION_POINTER_DOWN:
-            {
-                Point pt = new Point();
-                boolean onTile = getTileIndex(event.getX(idx), event.getY(idx), pt);
-                if (onTile) {
-                    // へこます
-                    // 旗立てる
-                    if (tilePointer==MotionEvent.INVALID_POINTER_ID) {
-                        tilePointer = id;
-                        downPt = pt;
-                    }
-                }
-                else if (pt.y>=s[level].rows) {
-                    // 旗モードへ
-                    if (flagPointer==MotionEvent.INVALID_POINTER_ID) {
-                        flagPointer = id;
-                    }
-                }
-                break;
+        for (int i=0; i<cnt; ++i) {
+            if (act!=MotionEvent.ACTION_MOVE && i!=idx) {
+                continue;   // moveじゃなければ該当インデックス以外の情報不要
             }
-            case MotionEvent.ACTION_UP:
-            case MotionEvent.ACTION_POINTER_UP:
-            {
-                if (id==tilePointer) {
-                    // 開ける
-                    Point pt = new Point();
-                    if (getTileIndex(event.getX(idx), event.getY(idx), pt)) {
-                        openPt= pt;
-                    }
-                    tilePointer = MotionEvent.INVALID_POINTER_ID;
-                }
-                else if (id==flagPointer) {
-                    // 旗モード解除
-                    flagPointer = MotionEvent.INVALID_POINTER_ID;
-                }
-                break;
-            }
-            case MotionEvent.ACTION_MOVE:
-            {
-                int cnt = event.getPointerCount();
-                for (int i=0; i<cnt; ++i) {
-                    Point pt = new Point();
-                    boolean onTile = getTileIndex(event.getX(i), event.getY(i), pt);
 
-                    int id2 = event.getPointerId(i);
-                    if (id2==tilePointer) {
+            int id = event.getPointerId(i);
+            boolean onTile = getTileIndex(event.getX(i), event.getY(i), pt);
+
+            switch (act) {
+                case MotionEvent.ACTION_DOWN:
+                case MotionEvent.ACTION_POINTER_DOWN:
+                {
+                    if (onTile) {
+                        // へこます or 旗立てる
+                        if (tilePointer==MotionEvent.INVALID_POINTER_ID) {
+                            downPt = pt;
+                            tilePointer = id;
+                        }
+                    }
+                    else if (pt.y>=s[level].rows) {
+                        // 旗モードへ
+                        if (flagPointer==MotionEvent.INVALID_POINTER_ID) {
+                            flagPointer = id;
+                        }
+                    }
+                    break;
+                }
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_POINTER_UP:
+                {
+                    if (id==tilePointer) {
+                        // 開ける
+                        if (onTile) {
+                            openPt = pt;
+                        }
+                        tilePointer = MotionEvent.INVALID_POINTER_ID;
+                    }
+                    else if (id==flagPointer) {
+                        // 旗モード解除
+                        flagPointer = MotionEvent.INVALID_POINTER_ID;
+                    }
+                    break;
+                }
+                case MotionEvent.ACTION_MOVE:
+                {
+                    if (id==tilePointer) {
                         // へこます
                         if (onTile) {
                             downPt= pt;
                         }
                     }
-                    else if (id2==flagPointer) {
+                    else if (id==flagPointer) {
                         // 旗モード切り替え
-                        if (pt.y>=s[level].rows) {
-                            flagPointer = id2;
-                        }
-                        else {
+                        if (pt.y<s[level].rows) {
                             flagPointer = MotionEvent.INVALID_POINTER_ID;
                         }
                     }
+                    break;
                 }
-                break;
             }
         }
 
+        // 操作結果を反映
         boolean isFlagTime = isFlagTime();
         mainView.setBackgroundColor(isFlagTime ? 0xFF0080FF : 0xFFFF8000);
 
