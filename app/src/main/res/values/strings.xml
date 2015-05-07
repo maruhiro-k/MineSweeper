@@ -12,8 +12,13 @@
     <string name="high_score">ハイスコア</string>
     <string name="clear_score">記録消去</string>
     <string name="close_score">閉じる</string>
-    <string name="flag_hint">旗を立てるにはここをホールド</string>
-    <string name="flag_mode">旗モード</string>
     <string name="sweep_mode">スイープモード</string>
+    <string name="sweep_hint">旗を立てるにはここをホールド</string>
+    <string name="flag_mode">旗モード</string>
+    <string name="flag_hint">解除するにはここから指を離す</string>
+    <string name="clear_mode">クリア！</string>
+    <string name="clear_hint">おめでとうございます！</string>
+    <string name="miss_mode">失敗！</string>
+    <string name="miss_hint">リセットボタンでリトライ</string>
 
 </resources>

@@ -8,6 +8,7 @@ import android.graphics.Point;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -48,9 +49,12 @@ public class MainActivity extends ActionBarActivity {
     private ImageButton resetBtn;   // リセットボタン
     private TextView bombText;  // 爆弾の残り数
     private View mainView;  // View全体
-    private View touchView; // フラグスイッチ
+    private TextView modeText;  // モード表示
+    private TextView hintText;  // 説明文
     private int tilePointer = MotionEvent.INVALID_POINTER_ID;
     private int flagPointer = MotionEvent.INVALID_POINTER_ID;
+    private static final int CLEAR_MODE = MotionEvent.INVALID_POINTER_ID - 1;
+    private static final int MISS_MODE = MotionEvent.INVALID_POINTER_ID - 2;
 
    // 3x3のマスを順番に走査するためのクラス
     private class AroundIterator
@@ -83,7 +87,6 @@ public class MainActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mainView = findViewById(R.id.MainLayout);
-        mainView.setBackgroundColor(0xFFFF8000);
 
         // Viewを拾っておく
         field = (FrameLayout)findViewById(R.id.FieldTable);
@@ -91,6 +94,8 @@ public class MainActivity extends ActionBarActivity {
         bombText = (TextView) findViewById(R.id.BombCounter);
         TextView timerView = (TextView) findViewById(R.id.TimeCounter);
         timer = new MineTimer(timerView);  // ゲームタイマー
+        modeText = (TextView) findViewById(R.id.ModeHint);
+        hintText = (TextView) findViewById(R.id.FlagHint);
 
         // 画像用意
         Bitmap resetBmp = BitmapFactory.decodeResource(this.getResources(), R.drawable.reset);
@@ -176,6 +181,7 @@ public class MainActivity extends ActionBarActivity {
                         // 旗モードへ
                         if (flagPointer==MotionEvent.INVALID_POINTER_ID) {
                             flagPointer = id;
+                            updateBackColor(flagPointer);
                         }
                     }
                     break;
@@ -193,6 +199,7 @@ public class MainActivity extends ActionBarActivity {
                     else if (id==flagPointer) {
                         // 旗モード解除
                         flagPointer = MotionEvent.INVALID_POINTER_ID;
+                        updateBackColor(flagPointer);
                     }
                     break;
                 }
@@ -208,6 +215,7 @@ public class MainActivity extends ActionBarActivity {
                         // 旗モード切り替え
                         if (pt.y<s[level].rows) {
                             flagPointer = MotionEvent.INVALID_POINTER_ID;
+                            updateBackColor(flagPointer);
                         }
                     }
                     break;
@@ -217,7 +225,6 @@ public class MainActivity extends ActionBarActivity {
 
         // 操作結果を反映
         boolean isFlagTime = isFlagTime();
-        mainView.setBackgroundColor(isFlagTime ? 0xFF0080FF : 0xFFFF8000);
 
         if (isFlagTime) {
             tilePointer = MotionEvent.INVALID_POINTER_ID;
@@ -377,6 +384,10 @@ public class MainActivity extends ActionBarActivity {
             }
         }
         field.setEnabled(true);
+
+        tilePointer = MotionEvent.INVALID_POINTER_ID;
+        flagPointer = MotionEvent.INVALID_POINTER_ID;
+        updateBackColor(flagPointer);
     }
 
     private void clearDownTile() {
@@ -549,10 +560,10 @@ public class MainActivity extends ActionBarActivity {
         field.setEnabled(false);
 
         if (alive) {
-            resetBtn.setImageBitmap(resetImg[2]);   // リセットボタンを喜んだ絵に
+            updateBackColor(CLEAR_MODE);
         }
         else {
-            resetBtn.setImageBitmap(resetImg[3]);   // リセットボタンを悲しい絵に
+            updateBackColor(MISS_MODE);
         }
 
         // クリアなら残りの爆弾を旗に変換
@@ -585,11 +596,39 @@ public class MainActivity extends ActionBarActivity {
                 pref.edit().putLong(key, msec).commit();
                 String text = String.format("ハイスコア！ %.02f 秒", msec/1000.f);
                 Toast t = Toast.makeText(this, text, Toast.LENGTH_LONG);
+                t.setGravity(Gravity.TOP, 0, 200);
                 t.show();
             }
         }
 
         // タイマーストップ
         timer.stop();
+    }
+
+    private void updateBackColor(int mode) {
+        switch (mode) {
+            default:    // 旗モード
+                mainView.setBackgroundColor(0xFFFFAAAA);
+                modeText.setText(R.string.flag_mode);
+                hintText.setText(R.string.flag_hint);
+                break;
+            case MotionEvent.INVALID_POINTER_ID:    // スイープモード
+                mainView.setBackgroundColor(0xFF40CCFF);
+                modeText.setText(R.string.sweep_mode);
+                hintText.setText(R.string.sweep_hint);
+                break;
+            case CLEAR_MODE:    // クリア
+                mainView.setBackgroundResource(R.drawable.bg);
+                modeText.setText(R.string.clear_mode);
+                hintText.setText(R.string.clear_hint);
+                resetBtn.setImageBitmap(resetImg[2]);   // リセットボタンを喜んだ絵に
+                break;
+            case MISS_MODE:    // ミス
+                mainView.setBackgroundColor(0xFF808080);
+                modeText.setText(R.string.miss_mode);
+                hintText.setText(R.string.miss_hint);
+                resetBtn.setImageBitmap(resetImg[3]);   // リセットボタンを悲しい絵に
+                break;
+        }
     }
 }
