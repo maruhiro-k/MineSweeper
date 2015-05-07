@@ -12,5 +12,8 @@
     <string name="high_score">ハイスコア</string>
     <string name="clear_score">記録消去</string>
     <string name="close_score">閉じる</string>
+    <string name="flag_hint">旗を立てるにはここをホールド</string>
+    <string name="flag_mode">旗モード</string>
+    <string name="sweep_mode">スイープモード</string>
 
 </resources>

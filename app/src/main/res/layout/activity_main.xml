@@ -3,7 +3,8 @@
     android:layout_height="match_parent" android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    android:paddingBottom="@dimen/activity_vertical_margin" tools:context=".MainActivity">
+    android:paddingBottom="@dimen/activity_vertical_margin" tools:context=".MainActivity"
+    android:id="@+id/MainLayout">
 
     <TextView
         android:layout_width="wrap_content"
@@ -22,17 +23,6 @@
         android:paddingRight="8dp"
         android:paddingLeft="8dp"
         android:textStyle="bold" />
-
-    <Switch
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/flag_switch"
-        android:id="@+id/FlagSwitch"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
 
     <ImageButton
         android:layout_width="40dp"
@@ -70,13 +60,38 @@
         android:layout_height="fill_parent"
         android:layout_centerHorizontal="true"
         android:layout_below="@+id/BombCounter"
-        android:layout_above="@+id/FlagSwitch"
         android:id="@+id/FieldTable"
         android:background="#00000000"
         android:clickable="false"
         android:columnCount="10"
         android:rowCount="10"
         android:layout_marginTop="12dp"
-        android:layout_marginBottom="12dp"></FrameLayout>
+        android:layout_above="@+id/FlagView"></FrameLayout>
+
+    <FrameLayout
+        android:layout_width="fill_parent"
+        android:layout_height="100dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:id="@+id/FlagView"
+        android:layout_margin="8dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/flag_hint"
+            android:id="@+id/FlagHint"
+            android:layout_gravity="center_horizontal|bottom"
+            android:singleLine="false" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="@string/sweep_mode"
+            android:id="@+id/ModeHint"
+            android:layout_gravity="center" />
+    </FrameLayout>
 
 </RelativeLayout>

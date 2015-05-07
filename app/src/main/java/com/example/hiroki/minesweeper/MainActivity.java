@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -14,7 +15,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -47,6 +47,10 @@ public class MainActivity extends ActionBarActivity {
     private Bitmap resetImg[] = new Bitmap[4];  // リセットボタンの顔
     private ImageButton resetBtn;   // リセットボタン
     private TextView bombText;  // 爆弾の残り数
+    private View mainView;  // View全体
+    private View touchView; // フラグスイッチ
+    private int tilePointer = MotionEvent.INVALID_POINTER_ID;
+    private int flagPointer = MotionEvent.INVALID_POINTER_ID;
 
    // 3x3のマスを順番に走査するためのクラス
     private class AroundIterator
@@ -78,6 +82,8 @@ public class MainActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        mainView = findViewById(R.id.MainLayout);
+        mainView.setBackgroundColor(0xFFFF8000);
 
         // Viewを拾っておく
         field = (FrameLayout)findViewById(R.id.FieldTable);
@@ -128,49 +134,119 @@ public class MainActivity extends ActionBarActivity {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+
+        // 操作終了済み
+        if (!field.isEnabled()) {
+            return super.onTouchEvent(event);
+        }
+
         // へこみを戻す
         clearDownTile();
+        resetBtn.setImageBitmap(resetImg[0]);
 
-        if (field.isEnabled()) {
-            resetBtn.setImageBitmap(resetImg[0]);
+        Point downPt = null;
+        Point openPt = null;
 
-            // 座標とってフィールド内であること確認
-            // フィールド内のRCに展開
-            Point pt = new Point();
-            if (getTileIndex(event.getX(), event.getY(), pt)) {
-                int c = pt.x, r = pt.y;
+        int idx = event.getActionIndex();
+        int id = event.getPointerId(idx);
 
-                // 旗立て
-                if (isFlagTime()) {
-                    if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                        flag(r, c);
-                        return true;
+        switch (event.getActionMasked()) {
+            case MotionEvent.ACTION_DOWN:
+            case MotionEvent.ACTION_POINTER_DOWN:
+            {
+                Point pt = new Point();
+                boolean onTile = getTileIndex(event.getX(idx), event.getY(idx), pt);
+                if (onTile) {
+                    // へこます
+                    // 旗立てる
+                    if (tilePointer==MotionEvent.INVALID_POINTER_ID) {
+                        tilePointer = id;
+                        downPt = pt;
                     }
                 }
-
-                // 開く
-                else {
-                    if (event.getAction() == MotionEvent.ACTION_UP) {
-                        // 初回クリックでゲームスタート
-                        if (isFirstClick()) {
-                            startGame(r, c);
-                        }
-
-                        // 開ける
-                        int res = open(r, c);
-                        if (res < 0) {
-                            end(false);     // 死んだ
-                        } else if (res == 0) {
-                            end(true);    // クリア
-                        }
-                    } else {
-                        // へこます
-                        down(r, c);
-                        resetBtn.setImageBitmap(resetImg[1]);
+                else if (pt.y>=s[level].rows) {
+                    // 旗モードへ
+                    if (flagPointer==MotionEvent.INVALID_POINTER_ID) {
+                        flagPointer = id;
                     }
-                    return true;
                 }
+                break;
             }
+            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_POINTER_UP:
+            {
+                if (id==tilePointer) {
+                    // 開ける
+                    Point pt = new Point();
+                    if (getTileIndex(event.getX(idx), event.getY(idx), pt)) {
+                        openPt= pt;
+                    }
+                    tilePointer = MotionEvent.INVALID_POINTER_ID;
+                }
+                else if (id==flagPointer) {
+                    // 旗モード解除
+                    flagPointer = MotionEvent.INVALID_POINTER_ID;
+                }
+                break;
+            }
+            case MotionEvent.ACTION_MOVE:
+            {
+                int cnt = event.getPointerCount();
+                for (int i=0; i<cnt; ++i) {
+                    Point pt = new Point();
+                    boolean onTile = getTileIndex(event.getX(i), event.getY(i), pt);
+
+                    int id2 = event.getPointerId(i);
+                    if (id2==tilePointer) {
+                        // へこます
+                        if (onTile) {
+                            downPt= pt;
+                        }
+                    }
+                    else if (id2==flagPointer) {
+                        // 旗モード切り替え
+                        if (pt.y>=s[level].rows) {
+                            flagPointer = id2;
+                        }
+                        else {
+                            flagPointer = MotionEvent.INVALID_POINTER_ID;
+                        }
+                    }
+                }
+                break;
+            }
+        }
+
+        boolean isFlagTime = isFlagTime();
+        mainView.setBackgroundColor(isFlagTime ? 0xFF0080FF : 0xFFFF8000);
+
+        if (downPt!=null) {
+            if (isFlagTime) {
+                // 旗立てる
+                flag(downPt.y, downPt.x);
+                tilePointer = MotionEvent.INVALID_POINTER_ID;
+            }
+            else {
+                // へこます
+                down(downPt.y, downPt.x);
+                resetBtn.setImageBitmap(resetImg[1]);
+            }
+            return true;
+        }
+        else if (openPt!=null) {
+            // 初回クリックでゲームスタート
+            if (isFirstClick()) {
+                startGame(openPt.y, openPt.x);
+            }
+
+            // 開ける
+            int res = open(openPt.y, openPt.x);
+            if (res < 0) {
+                end(false);     // 死んだ
+            } else if (res == 0) {
+                end(true);    // クリア
+            }
+            return true;
         }
 
         return super.onTouchEvent(event);
@@ -317,12 +393,10 @@ public class MainActivity extends ActionBarActivity {
         tiles[0][0].getLocationInWindow(pos);
         x -= pos[0];
         y -= pos[1];
-        float c = x / Tile.SIZE;
-        float r = y / Tile.SIZE;
-        if (c<0 || c>=s[level].cols || r<0 || r>=s[level].rows) {
+        index.set((int) (x / Tile.SIZE), (int) (y / Tile.SIZE));
+        if (index.x<0 || index.x>=s[level].cols || index.y<0 || index.y>=s[level].rows) {
             return false;
         }
-        index.set((int) (c), (int) (r));
         return true;
     }
 
@@ -348,8 +422,7 @@ public class MainActivity extends ActionBarActivity {
     }
 
     private boolean isFlagTime() {
-        Switch s = (Switch)findViewById(R.id.FlagSwitch);
-        return (s.isChecked());
+        return (flagPointer != MotionEvent.INVALID_POINTER_ID);
     }
 
     private void flag(int r, int c) {
