@@ -466,10 +466,11 @@ public class MainActivity extends ActionBarActivity {
 
     private void down(int r, int c) {
         // へこます
-        if (tiles[r][c].get()==Tile.ST_UNKNOWN) {
+        int st = tiles[r][c].get();
+        if (st==Tile.ST_UNKNOWN) {
             tiles[r][c].set(Tile.ST_DOWN);
         }
-        else {
+        else if (st!=Tile.ST_FLAG) {
             AroundIterator it = new AroundIterator(r, c);
             while (it.next()) {
                 if (tiles[it.r][it.c].get()==Tile.ST_UNKNOWN) {
