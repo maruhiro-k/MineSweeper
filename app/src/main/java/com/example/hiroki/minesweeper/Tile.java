@@ -14,7 +14,7 @@ public class Tile extends ImageView {
 
     public static final int ST_UNKNOWN = 0;
     public static final int ST_FLAG = 1;
-    public static final int ST_QUESTION = 2;
+    public static final int ST_QUESTION = 2;    // 使ってない
     public static final int ST_OPENED = 3;
     public static final int ST_BOMB = 12;
     public static final int ST_FIRED = 13;
